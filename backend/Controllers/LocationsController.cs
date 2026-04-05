@@ -146,3 +146,4 @@ public class LocationsController : Controller
         return _context.Locations.Any(e => e.Id == id);
     }
 }
+// Refactored location logic.

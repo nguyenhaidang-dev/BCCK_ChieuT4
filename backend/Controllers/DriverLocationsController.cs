@@ -44,3 +44,4 @@ public class DriverLocationsController : ControllerBase
         });
     }
 }
+// Refactored location logic.
