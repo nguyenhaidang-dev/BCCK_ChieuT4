@@ -16,3 +16,4 @@ public class AdminController : Controller
         return RedirectToAction("Index", "Home");
     }
 }
+// Optimization and refactoring review.

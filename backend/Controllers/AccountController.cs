@@ -75,3 +75,4 @@ public class AccountController : Controller
         return View();
     }
 }
+// Optimization and refactoring review.
