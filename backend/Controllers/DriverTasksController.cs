@@ -764,3 +764,4 @@ public class TaskDto
     public DateTime? EstimatedArrivalTime { get; set; }
     public string QrCode { get; set; } = string.Empty;
 }
+// Improved query performance.
