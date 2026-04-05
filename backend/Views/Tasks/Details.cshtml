@@ -1,0 +1,134 @@
+@model backend.Models.Task
+
+@{
+    ViewData["Title"] = "Chi tiết nhiệm vụ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Chi tiết nhiệm vụ</h1>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Thông tin nhiệm vụ</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Mã tham chiếu:</dt>
+                            <dd class="col-sm-8">@Html.DisplayFor(model => model.ReferenceCode)</dd>
+
+                            <dt class="col-sm-4">Trạng thái:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-@(Model.Status == backend.Models.TaskStatus.Unassigned ? "warning" :
+                                                     Model.Status == backend.Models.TaskStatus.Assigned ? "info" :
+                                                     Model.Status == backend.Models.TaskStatus.InProgress ? "primary" :
+                                                     Model.Status == backend.Models.TaskStatus.Completed ? "success" : "secondary")">
+                                    @Model.Status
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Người tạo:</dt>
+                            <dd class="col-sm-8">Manager</dd>
+
+                            <dt class="col-sm-4">Tài xế:</dt>
+                            <dd class="col-sm-8">Chưa phân công</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Thời gian tạo:</dt>
+                            <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">Thời gian cập nhật:</dt>
+                            <dd class="col-sm-8">@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">Thời gian dự kiến:</dt>
+                            <dd class="col-sm-8">@Model.ScheduledPickupTime.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">Giá ước tính:</dt>
+                            <dd class="col-sm-8">@Model.EstimatedPrice.ToString("N0") VND</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Thông tin địa điểm</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Điểm lấy hàng</h6>
+                        <p><strong>Địa chỉ:</strong> @Model.PickupAddress</p>
+                        <p><strong>Tọa độ:</strong> @Model.PickupLatitude, @Model.PickupLongitude</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Điểm giao hàng</h6>
+                        <p><strong>Địa chỉ:</strong> @Model.DeliveryAddress</p>
+                        <p><strong>Tọa độ:</strong> @Model.DeliveryLatitude, @Model.DeliveryLongitude</p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>Khoảng cách:</strong> @Model.DistanceKm.ToString("N1") km</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Trọng lượng:</strong> @Model.Weight.ToString("N1") kg</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Hành động</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Status == backend.Models.TaskStatus.Unassigned)
+                {
+                    <a asp-action="Assign" asp-route-id="@Model.Id" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-user-plus"></i> Phân công tài xế
+                    </a>
+                }
+                <a asp-action="Index" class="btn btn-secondary w-100">
+                    <i class="fas fa-list"></i> Xem tất cả nhiệm vụ
+                </a>
+            </div>
+        </div>
+
+        @if (Model.Trips != null && Model.Trips.Any())
+        {
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Lịch sử chuyến đi</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var trip in Model.Trips)
+                    {
+                        <div class="mb-3 p-3 border rounded">
+                            <p><strong>Khoảng cách thực tế:</strong> @trip.ActualDistanceKm.ToString("N1") km</p>
+                            <p><strong>Giá thực tế:</strong> @string.Format("{0:N0} VND", trip.ActualPrice)</p>
+                            <p><strong>Thời gian bắt đầu:</strong> @trip.StartTime.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p><strong>Thời gian kết thúc:</strong> @trip.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa hoàn thành"</p>
+                            @if (!string.IsNullOrEmpty(trip.Notes))
+                            {
+                                <p><strong>Ghi chú:</strong> @trip.Notes</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,154 @@
+@model IEnumerable<backend.Models.Vehicle>
+
+@{
+    ViewData["Title"] = "Vehicles Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Quản lý Phương tiện</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createVehicleModal">
+        <i class="fas fa-plus"></i> Thêm Phương tiện Mới
+    </button>
+</div>
+
+<!-- Toolbar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm phương tiện...">
+            </div>
+            <div class="col-md-6">
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả Trạng thái</option>
+                    <option value="Available">Có sẵn</option>
+                    <option value="InMaintenance">Đang bảo trì</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="vehiclesTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Biển số xe</th>
+                        <th>Loại xe</th>
+                        <th>Tải trọng tối đa</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model) {
+                    <tr>
+                        <td>@item.PlateNumber</td>
+                        <td>@item.Type</td>
+                        <td>@item.MaxLoad kg</td>
+                        <td>
+                            <span class="badge bg-@(item.Status == backend.Models.VehicleStatus.Available ? "success" : "warning")">
+                                @item.Status
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editVehicle(@item.Id)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewVehicle(@item.Id)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteVehicle(@item.Id)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Vehicle Modal -->
+<div class="modal fade" id="createVehicleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo Phương tiện Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Create">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Biển số xe</label>
+                            <input name="PlateNumber" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Loại xe</label>
+                            <input name="Type" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tải trọng tối đa (kg)</label>
+                            <input name="MaxLoad" type="number" step="0.01" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select name="Status" class="form-select" required>
+                                <option value="Available">Có sẵn</option>
+                                <option value="InMaintenance">Đang bảo trì</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+        document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#vehiclesTable tbody tr');
+
+            rows.forEach(row => {
+                const plateNumber = row.cells[0].textContent.toLowerCase();
+                const type = row.cells[1].textContent.toLowerCase();
+                const status = row.cells[3].textContent.trim();
+
+                const matchesSearch = plateNumber.includes(searchTerm) || type.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+            });
+        }
+
+        function editVehicle(id) {
+            window.location.href = '/Vehicles/Edit/' + id;
+        }
+
+        function viewVehicle(id) {
+            window.location.href = '/Vehicles/Details/' + id;
+        }
+
+        function deleteVehicle(id) {
+            if (confirm('Are you sure you want to delete this vehicle?')) {
+                window.location.href = '/Vehicles/Delete/' + id;
+            }
+        }
+    </script>
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TMSS Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: #343a40;
+            color: white;
+            transition: width 0.3s;
+            z-index: 1000;
+        }
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.75);
+            padding: 0.75rem 1rem;
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,.1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: #0d6efd;
+        }
+        .main-content {
+            margin-left: 250px;
+            transition: margin-left 0.3s;
+        }
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+        .header {
+            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #dee2e6;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 250px;
+            z-index: 1030;
+            transition: left 0.3s;
+        }
+        .header.expanded {
+            left: 70px;
+        }
+        .content-wrapper {
+            padding-top: 60px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            margin: 1rem;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+        }
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="d-flex justify-content-between align-items-center p-3">
+            <span class="fs-4" id="sidebar-title">Quản trị TMSS</span>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Users" asp-action="Index">
+                    <i class="fas fa-users"></i>
+                    <span>Người dùng</span>
+                </a>
+            </li>
+            @if (User.IsInRole("Admin"))
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="UserManagement" asp-action="Index">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Quản lý Người dùng</span>
+                    </a>
+                </li>
+            }
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Tasks" asp-action="Index">
+                    <i class="fas fa-tasks"></i>
+                    <span>Nhiệm vụ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Vehicles" asp-action="Index">
+                    <i class="fas fa-truck"></i>
+                    <span>Phương tiện</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Locations" asp-action="Index">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Vị trí</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-cogs"></i>
+                    <span>Cài đặt</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Header -->
+    <header class="header d-flex justify-content-between align-items-center px-3" id="header">
+        <h5 class="mb-0">Hệ thống Quản lý Vận tải</h5>
+        <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary me-2">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-user"></i> Quản trị viên
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-user"></i> Hồ sơ</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const header = document.getElementById('header');
+            const title = document.getElementById('sidebar-title');
+
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            header.classList.toggle('expanded');
+
+            if (sidebar.classList.contains('collapsed')) {
+                title.style.display = 'none';
+            } else {
+                title.style.display = 'block';
+            }
+        });
+
+        // Set active nav link
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

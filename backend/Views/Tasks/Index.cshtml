@@ -1,0 +1,213 @@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Quản lý Nhiệm vụ";
+
+    string GetStatusDisplay(backend.Models.TaskStatus status)
+    {
+        return status switch
+        {
+            backend.Models.TaskStatus.Unassigned => "Chưa phân công",
+            backend.Models.TaskStatus.Assigned => "Đã phân công",
+            backend.Models.TaskStatus.InProgress => "Đang thực hiện",
+            backend.Models.TaskStatus.Completed => "Hoàn thành",
+            backend.Models.TaskStatus.Cancelled => "Đã hủy",
+            _ => status.ToString()
+        };
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Quản lý Nhiệm vụ</h1>
+    <div>
+        <a href="/Tasks/Tracking" class="btn btn-info me-2">
+            <i class="fas fa-map-marker-alt"></i> Theo dõi Tài xế
+        </a>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+            <i class="fas fa-plus"></i> Tạo Nhiệm vụ Mới
+        </button>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm nhiệm vụ...">
+            </div>
+            <div class="col-md-6">
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả Trạng thái</option>
+                    <option value="Unassigned">Chưa phân công</option>
+                    <option value="Assigned">Đã phân công</option>
+                    <option value="InProgress">Đang thực hiện</option>
+                    <option value="Completed">Hoàn thành</option>
+                    <option value="Cancelled">Đã hủy</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="tasksTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mã tham chiếu</th>
+                        <th>Điểm đi</th>
+                        <th>Điểm đến</th>
+                        <th>Khoảng cách</th>
+                        <th>Giá dự kiến</th>
+                        <th>Trạng thái</th>
+                        <th>Tài xế</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model) {
+                    <tr>
+                        <td>@item.Task.ReferenceCode</td>
+                        <td>@item.Task.PickupAddress</td>
+                        <td>@item.Task.DeliveryAddress</td>
+                        <td>@item.Task.DistanceKm km</td>
+                        <td>@string.Format("{0:N0} VND", item.Task.EstimatedPrice)</td>
+                        <td>
+                            <span class="badge bg-@(item.Task.Status == backend.Models.TaskStatus.Unassigned ? "secondary" :
+                                                     item.Task.Status == backend.Models.TaskStatus.Assigned ? "primary" :
+                                                     item.Task.Status == backend.Models.TaskStatus.InProgress ? "warning" :
+                                                     item.Task.Status == backend.Models.TaskStatus.Completed ? "success" : "danger")">
+                                @GetStatusDisplay(item.Task.Status)
+                            </span>
+                        </td>
+                        <td>@item.DriverName</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="viewTask(@item.Task.Id)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            @if (item.Task.Status == backend.Models.TaskStatus.Unassigned)
+                            {
+                                <button class="btn btn-sm btn-outline-success me-1" onclick="assignTask(@item.Task.Id)">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+                            }
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTask(@item.Task.Id)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo Nhiệm vụ Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Địa chỉ lấy hàng</label>
+                            <input name="PickupAddress" class="form-control" required />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Vĩ độ lấy hàng</label>
+                            <input name="PickupLatitude" type="number" step="0.000001" class="form-control" required />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Kinh độ lấy hàng</label>
+                            <input name="PickupLongitude" type="number" step="0.000001" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Địa chỉ giao hàng</label>
+                            <input name="DeliveryAddress" class="form-control" required />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Vĩ độ giao hàng</label>
+                            <input name="DeliveryLatitude" type="number" step="0.000001" class="form-control" required />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Kinh độ giao hàng</label>
+                            <input name="DeliveryLongitude" type="number" step="0.000001" class="form-control" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Trọng lượng (kg)</label>
+                            <input name="Weight" type="number" step="0.01" class="form-control" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Loại xe yêu cầu</label>
+                            <select name="VehicleType" class="form-select" required>
+                                <option value="1 Tấn">1 Tấn</option>
+                                <option value="5 Tấn">5 Tấn</option>
+                                <option value="Container 40ft">Container 40ft</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Thời gian lấy hàng dự kiến</label>
+                            <input name="ScheduledPickupTime" type="datetime-local" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Giá trị nhiệm vụ dự kiến sẽ được tính tự động khi tạo.</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo Nhiệm vụ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+        document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#tasksTable tbody tr');
+
+            rows.forEach(row => {
+                const reference = row.cells[0].textContent.toLowerCase();
+                const pickup = row.cells[1].textContent.toLowerCase();
+                const delivery = row.cells[2].textContent.toLowerCase();
+                const status = row.cells[5].textContent.trim();
+
+                const matchesSearch = reference.includes(searchTerm) || pickup.includes(searchTerm) || delivery.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+            });
+        }
+
+        function viewTask(id) {
+            window.location.href = '/Tasks/Details/' + id;
+        }
+
+        function assignTask(id) {
+            window.location.href = '/Tasks/Assign/' + id;
+        }
+
+        function deleteTask(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa nhiệm vụ này?')) {
+                // Implement delete functionality
+                alert('Chức năng xóa chưa được triển khai');
+            }
+        }
+    </script>
+}

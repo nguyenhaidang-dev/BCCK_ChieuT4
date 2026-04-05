@@ -1,0 +1,97 @@
+@model backend.Models.Task
+
+@{
+    ViewData["Title"] = "Phân công tài xế";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Phân công tài xế</h1>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Quay lại chi tiết
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Thông tin nhiệm vụ</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Mã tham chiếu:</strong> @Model.ReferenceCode</p>
+                <p><strong>Từ:</strong> @Model.PickupAddress</p>
+                <p><strong>Đến:</strong> @Model.DeliveryAddress</p>
+                <p><strong>Khoảng cách:</strong> @Model.DistanceKm.ToString("N1") km</p>
+                <p><strong>Trọng lượng:</strong> @Model.Weight.ToString("N1") kg</p>
+                <p><strong>Giá ước tính:</strong> @Model.EstimatedPrice.ToString("N0") VND</p>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Chọn tài xế</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Assign" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label for="driverId" class="form-label">Tài xế khả dụng</label>
+                        <select name="driverId" id="driverId" class="form-select" required>
+                            <option value="">-- Chọn tài xế --</option>
+                            @if (ViewBag.AvailableDrivers != null)
+                            {
+                                foreach (var driver in ViewBag.AvailableDrivers)
+                                {
+                                    <option value="@driver.Id">@driver.Name (@driver.Email) - @driver.Status</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Phân công tài xế
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Lưu ý</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Hiển thị tất cả tài xế đã được tạo bởi Admin
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clock text-warning me-2"></i>
+                        Sau khi phân công, trạng thái nhiệm vụ sẽ chuyển thành "Đã phân công"
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-user-check text-success me-2"></i>
+                        Tài xế có thể bắt đầu thực hiện nhiệm vụ
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        @if (ViewBag.AvailableDrivers != null && ViewBag.AvailableDrivers.Count == 0)
+        {
+            <div class="card mt-4 border-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle text-warning fa-2x mb-3"></i>
+                    <h6>Không có tài xế khả dụng</h6>
+                    <p class="text-muted small">Hiện tại không có tài xế nào có trạng thái hoạt động để phân công.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>

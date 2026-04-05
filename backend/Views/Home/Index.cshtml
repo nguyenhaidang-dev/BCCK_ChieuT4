@@ -1,0 +1,315 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var userRoles = ViewBag.UserRoles as IList<string>;
+    var isAdmin = ViewBag.IsAdmin as bool?;
+    var isManager = ViewBag.IsManager as bool?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0">Tổng quan</h1>
+        @if (isAdmin == true)
+        {
+            <small class="text-muted">Administrator Panel</small>
+        }
+        else if (isManager == true)
+        {
+            <small class="text-muted">Manager Panel</small>
+        }
+    </div>
+    <div class="d-flex align-items-center">
+        <span class="badge bg-primary me-2">@string.Join(", ", userRoles ?? new List<string>())</span>
+        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (isAdmin == true)
+{
+    <!-- Admin Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Tổng Người dùng</h5>
+                            <h3>@ViewBag.TotalDrivers</h3>
+                        </div>
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Người dùng Hoạt động</h5>
+                            <h3>@ViewBag.ActiveDrivers</h3>
+                        </div>
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Tổng Phương tiện</h5>
+                            <h3>@ViewBag.TotalVehicles</h3>
+                        </div>
+                        <i class="fas fa-truck fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Phương tiện Hoạt động</h5>
+                            <h3>@ViewBag.ActiveVehicles</h3>
+                        </div>
+                        <i class="fas fa-truck-moving fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hành động Nhanh</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="/UserManagement" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-users"></i><br>Quản lý Người dùng
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/Vehicles" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-truck"></i><br>Quản lý Phương tiện
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/Locations" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-map-marker-alt"></i><br>Quản lý Địa điểm
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/Tasks" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-tasks"></i><br>Quản lý Nhiệm vụ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Charts -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Phân bố Trạng thái Người dùng</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="driverChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Trạng thái Phương tiện</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="vehicleChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (isManager == true)
+{
+    <!-- Manager Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Tổng Nhiệm vụ</h5>
+                            <h3>@ViewBag.TotalTasks</h3>
+                        </div>
+                        <i class="fas fa-tasks fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Nhiệm vụ Chờ xử lý</h5>
+                            <h3>@ViewBag.PendingTasks</h3>
+                        </div>
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Phương tiện Sẵn sàng</h5>
+                            <h3>@ViewBag.ActiveVehicles</h3>
+                        </div>
+                        <i class="fas fa-truck-moving fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manager Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hành động Nhanh</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="/Tasks" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-tasks"></i><br>Quản lý Nhiệm vụ
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/Vehicles" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-truck"></i><br>Xem Phương tiện
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/Locations" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-map-marker-alt"></i><br>Xem Địa điểm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manager Charts -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Trạng thái Nhiệm vụ</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="taskChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tình trạng Phương tiện</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="vehicleChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @if (isAdmin == true)
+    {
+        <script>
+            // Admin Charts
+            const driverCtx = document.getElementById('driverChart').getContext('2d');
+            new Chart(driverCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hoạt động', 'Không hoạt động'],
+                    datasets: [{
+                        data: [@ViewBag.ActiveDrivers, @ViewBag.TotalDrivers - @ViewBag.ActiveDrivers],
+                        backgroundColor: ['#28a745', '#dc3545']
+                    }]
+                }
+            });
+
+            const vehicleCtx = document.getElementById('vehicleChart').getContext('2d');
+            new Chart(vehicleCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sẵn sàng', 'Đang bảo trì'],
+                    datasets: [{
+                        label: 'Phương tiện',
+                        data: [@ViewBag.ActiveVehicles, @ViewBag.TotalVehicles - @ViewBag.ActiveVehicles],
+                        backgroundColor: ['#17a2b8', '#ffc107']
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+    }
+    else if (isManager == true)
+    {
+        <script>
+            // Manager Charts
+            const taskCtx = document.getElementById('taskChart').getContext('2d');
+            new Chart(taskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hoàn thành', 'Chờ xử lý'],
+                    datasets: [{
+                        data: [@ViewBag.TotalTasks - @ViewBag.PendingTasks, @ViewBag.PendingTasks],
+                        backgroundColor: ['#28a745', '#ffc107']
+                    }]
+                }
+            });
+
+            const vehicleCtx = document.getElementById('vehicleChart').getContext('2d');
+            new Chart(vehicleCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Sẵn sàng', 'Đang bảo trì'],
+                    datasets: [{
+                        data: [@ViewBag.ActiveVehicles, @ViewBag.TotalVehicles - @ViewBag.ActiveVehicles],
+                        backgroundColor: ['#17a2b8', '#dc3545']
+                    }]
+                }
+            });
+        </script>
+    }
+}

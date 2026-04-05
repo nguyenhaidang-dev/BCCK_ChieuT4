@@ -1,0 +1,136 @@
+@model IEnumerable<backend.Models.Location>
+
+@{
+    ViewData["Title"] = "Locations Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Quản lý Vị trí</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createLocationModal">
+        <i class="fas fa-plus"></i> Thêm Vị trí Mới
+    </button>
+</div>
+
+<!-- Toolbar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm vị trí...">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="locationsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tên</th>
+                        <th>Địa chỉ</th>
+                        <th>Vĩ độ</th>
+                        <th>Kinh độ</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model) {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Address</td>
+                        <td>@item.Latitude</td>
+                        <td>@item.Longitude</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editLocation(@item.Id)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewLocation(@item.Id)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteLocation(@item.Id)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Location Modal -->
+<div class="modal fade" id="createLocationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo Vị trí Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Create">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Tên</label>
+                            <input name="Name" class="form-control" required />
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <textarea name="Address" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Vĩ độ</label>
+                            <input name="Latitude" type="number" step="0.000001" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kinh độ</label>
+                            <input name="Longitude" type="number" step="0.000001" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#locationsTable tbody tr');
+
+            rows.forEach(row => {
+                const name = row.cells[0].textContent.toLowerCase();
+                const address = row.cells[1].textContent.toLowerCase();
+
+                const matchesSearch = name.includes(searchTerm) || address.includes(searchTerm);
+
+                row.style.display = matchesSearch ? '' : 'none';
+            });
+        }
+
+        function editLocation(id) {
+            window.location.href = '/Locations/Edit/' + id;
+        }
+
+        function viewLocation(id) {
+            window.location.href = '/Locations/Details/' + id;
+        }
+
+        function deleteLocation(id) {
+            if (confirm('Are you sure you want to delete this location?')) {
+                window.location.href = '/Locations/Delete/' + id;
+            }
+        }
+    </script>
+}

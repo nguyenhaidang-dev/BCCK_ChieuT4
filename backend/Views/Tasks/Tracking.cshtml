@@ -1,0 +1,227 @@
+@model IEnumerable<backend.Controllers.TasksController.DriverTrackingViewModel>
+
+@{
+    ViewData["Title"] = "Theo dõi Tài xế";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Theo dõi Tài xế</h1>
+    <a href="/Tasks" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Quay lại Danh sách Nhiệm vụ
+    </a>
+</div>
+
+<!-- Map Container -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div id="map" style="height: 600px; width: 100%;"></div>
+    </div>
+</div>
+
+<!-- Driver Status Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Trạng thái Tài xế</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="driversTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tên Tài xế</th>
+                        <th>Vị trí Hiện tại</th>
+                        <th>Thời gian Cập nhật</th>
+                        <th>Nhiệm vụ Hiện tại</th>
+                        <th>Trạng thái Nhiệm vụ</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    var driver = item.Driver;
+                    var latestLocation = item.LatestLocation;
+                    var currentTask = item.CurrentTask;
+                    <tr data-driver-id="@driver.Id.ToString()">
+                        <td>@driver.Name</td>
+                        <td>
+                            @if (latestLocation != null)
+                            {
+                                <span>@latestLocation.Latitude.ToString("F6"), @latestLocation.Longitude.ToString("F6")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa có vị trí</span>
+                            }
+                        </td>
+                        <td>
+                            @if (latestLocation != null)
+                            {
+                                <span>@latestLocation.Timestamp.ToString("HH:mm:ss dd/MM/yyyy")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (currentTask != null)
+                            {
+                                <span>@currentTask.ReferenceCode</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có nhiệm vụ</span>
+                            }
+                        </td>
+                        <td>
+                            @if (currentTask != null)
+                            {
+                                <span class="badge bg-@(currentTask.Status == backend.Models.TaskStatus.Assigned ? "primary" :
+                                                     currentTask.Status == backend.Models.TaskStatus.InProgress ? "warning" :
+                                                     currentTask.Status == backend.Models.TaskStatus.Completed ? "success" : "secondary")">
+                                    @currentTask.Status
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (currentTask != null)
+                            {
+                                <button class="btn btn-sm btn-outline-primary" onclick="showDriverLocation(this.closest('tr').dataset.driverId)">
+                                    <i class="fas fa-eye"></i> Xem
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <script>
+        let map;
+        let markers = {};
+        let connection;
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([10.8231, 106.6297], 12); // Default to Ho Chi Minh City
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add markers for initial driver locations
+            @foreach (var item in Model)
+            {
+                var driver = item.Driver;
+                var latestLocation = item.LatestLocation;
+                if (latestLocation != null)
+                {
+                    @:addDriverMarker('@driver.Id', @latestLocation.Latitude, @latestLocation.Longitude, '@driver.Name');
+                }
+            }
+        }
+
+        // Add or update driver marker
+        function addDriverMarker(driverId, lat, lng, driverName) {
+            if (markers[driverId]) {
+                markers[driverId].setLatLng([lat, lng]);
+            } else {
+                markers[driverId] = L.marker([lat, lng])
+                    .addTo(map)
+                    .bindPopup(`<b>${driverName}</b><br>Vị trí: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            }
+        }
+
+        // Update driver status in table
+        function updateDriverStatus(driverId, lat, lng, timestamp) {
+            const row = document.querySelector(`tr[data-driver-id="${driverId}"]`);
+            if (row) {
+                const locationCell = row.cells[1];
+                const timeCell = row.cells[2];
+
+                locationCell.innerHTML = `<span>${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`;
+                timeCell.innerHTML = `<span>${new Date(timestamp).toLocaleString('vi-VN')}</span>`;
+            }
+        }
+
+        // Initialize SignalR connection
+        function initSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl('/locationHub', {
+                    transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling
+                })
+                .build();
+
+            connection.on('ReceiveLocationUpdate', function (driverId, latitude, longitude, speed, heading) {
+                addDriverMarker(driverId, latitude, longitude, `Tài xế ${driverId}`);
+                updateDriverStatus(driverId, latitude, longitude, new Date());
+            });
+
+            connection.start()
+                .then(function () {
+                    console.log('SignalR Connected');
+                    // Request initial locations
+                    connection.invoke('RequestDriverLocations');
+                })
+                .catch(function (err) {
+                    console.error(err.toString());
+                });
+        }
+
+        // Show driver location on map
+        function showDriverLocation(driverId) {
+            fetch('/api/driverlocations/' + driverId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Location not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const lat = data.latitude;
+                    const lng = data.longitude;
+
+                    // Center the map on the driver's location
+                    map.setView([lat, lng], 15);
+
+                    // Add or update a marker for the selected driver
+                    if (window.selectedDriverMarker) {
+                        map.removeLayer(window.selectedDriverMarker);
+                    }
+                    window.selectedDriverMarker = L.marker([lat, lng])
+                        .addTo(map)
+                        .bindPopup(`<b>Vị trí Tài xế</b><br>Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}<br>Thời gian: ${new Date(data.timestamp).toLocaleString('vi-VN')}`)
+                        .openPopup();
+                })
+                .catch(error => {
+                    console.error('Error fetching driver location:', error);
+                    alert('Không thể lấy vị trí tài xế. Vui lòng thử lại.');
+                });
+        }
+
+        // View task details
+        function viewTask(taskId) {
+            window.location.href = '/Tasks/Details/' + taskId;
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            initSignalR();
+        });
+    </script>
+}
