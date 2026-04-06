@@ -127,3 +127,4 @@ public class LocationHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 }
+// Enhanced realtime handling.
