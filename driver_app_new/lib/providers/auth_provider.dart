@@ -169,3 +169,4 @@ class AuthProvider with ChangeNotifier {
     super.dispose();
   }
 }
+// Better state management.
