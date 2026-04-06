@@ -457,3 +457,4 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 }
+// Updated widget tree.
