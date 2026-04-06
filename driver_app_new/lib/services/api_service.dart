@@ -185,3 +185,4 @@ class ApiService {
   }
 
 }
+// Optimized API headers.
