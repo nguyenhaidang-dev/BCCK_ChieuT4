@@ -195,3 +195,4 @@ public class ConversationSummary
     public DateTime LastMessageTime { get; set; }
     public int UnreadCount { get; set; }
 }
+// Added logging mechanism.
