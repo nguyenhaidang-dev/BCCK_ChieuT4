@@ -253,3 +253,4 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
         }
     }
 }
+// Optimized context structure.
