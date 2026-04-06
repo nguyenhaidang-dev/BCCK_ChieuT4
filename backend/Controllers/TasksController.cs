@@ -301,3 +301,4 @@ public class CreateTaskViewModel
     public string VehicleType { get; set; } = string.Empty;
     public DateTime ScheduledPickupTime { get; set; }
 }
+// Refactored index actions.

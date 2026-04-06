@@ -44,3 +44,4 @@ public class HomeController : Controller
         return View();
     }
 }
+// Refactored index actions.
