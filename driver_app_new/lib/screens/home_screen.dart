@@ -133,3 +133,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+// UI improvements for Home.
