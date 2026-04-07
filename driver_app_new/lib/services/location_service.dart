@@ -86,3 +86,4 @@ class LocationService {
     stopLocationTracking();
   }
 }
+// Added try-catch blocks.
