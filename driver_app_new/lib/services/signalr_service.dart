@@ -92,3 +92,4 @@ class SignalRService {
   HubConnectionState? get connectionState => _hubConnection?.state;
 
 }
+// Stabilized socket connection.
