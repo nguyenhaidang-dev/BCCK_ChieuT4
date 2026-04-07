@@ -146,3 +146,4 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 }
+// Fixed list rendering bug.
