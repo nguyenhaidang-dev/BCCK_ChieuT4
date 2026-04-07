@@ -175,3 +175,4 @@ class _EarningsScreenState extends State<EarningsScreen> {
     );
   }
 }
+// Improved earnings chart UI.
