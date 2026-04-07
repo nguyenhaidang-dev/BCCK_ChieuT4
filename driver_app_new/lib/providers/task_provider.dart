@@ -113,3 +113,4 @@ class TaskProvider with ChangeNotifier {
     notifyListeners();
   }
 }
+// Refactored notifyListeners.
